@@ -35,13 +35,10 @@
             void main() {
                  vec4 color = texture2D(texture, vUv * 4.0);
                  float d = length(vPosition.xy)/3.5;
-                 float ratio = 0.0;
-                 if (d < innerRadius){
-                    ratio = 1.0;
-                 }
-                 else if (d < outerRadius) {
-                    ratio = mix(0.0, 1.0, (outerRadius -d)/(outerRadius - innerRadius));
-                 }
+                 float ratio = mix(1.0, 0.0, clamp(sign(d - innerRadius),0.0,1.0));
+                 float radial = mix(0.0, 1.0, (outerRadius - d)/(outerRadius - innerRadius));
+                 ratio = mix(ratio, radial, clamp(sign(outerRadius - d),0.0,1.0));
+                 ratio = mix(0.0, ratio, sign(outerRadius - d));
                  gl_FragColor = vec4(color.rgb * ratio, 0.1); 
             }
         </script>
