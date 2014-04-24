@@ -1,0 +1,13 @@
+# Blender MTL File: 'Puck.blend'
+# Material Count: 1
+newmtl Red_Plastic
+Ns 15.686275
+Ka 0.337600 0.000000 0.000000
+Kd 0.337600 0.000000 0.000000
+Ks 0.200787 0.200787 0.200787
+Ni 1.000000
+d 1.000000
+Ns 100
+illum 2
+
+

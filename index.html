@@ -1,0 +1,58 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="viewport" content="width=device-width, user-scalable=no" />
+        <title>Air Hockey by @MortimerGoro</title>
+        
+        <script type="text/javascript" src="lib/three.min.js"></script>
+        <script type="text/javascript" src="lib/OBJMTLLoader.js"></script>
+        <script type="text/javascript" src="lib/box2d.js"></script>
+        <script type="text/javascript" src="lib/dat.gui.min.js"></script>
+        <script type="text/javascript" src="src/physics.js"></script>
+        <script type="text/javascript" src="src/AI.js"></script>
+        <script type="text/javascript" src="src/audio.js"></script>
+        <script type="text/javascript" src="src/hockey.js"></script>
+        <script type="text/javascript" src="src/model.js"></script>
+        <script type="text/javascript" src="src/main.js"></script>
+        
+        <script id="vs_floor" type="x-shader/x-vertex">
+            varying vec2 vUv;
+            varying vec3 vPosition;
+            void main() {
+                vUv = uv;
+                vPosition = position;
+                gl_Position =  projectionMatrix *  modelViewMatrix * vec4(position, 1.0);
+            }
+        </script>
+        <script id="fs_floor" type="x-shader/x-fragment">
+            uniform sampler2D texture;
+            uniform float innerRadius;
+            uniform float outerRadius;
+            varying vec2 vUv;
+            varying vec3 vPosition;
+
+            void main() {
+                 vec4 color = texture2D(texture, vUv * 4.0);
+                 float d = length(vPosition.xy)/3.5;
+                 float ratio = 0.0;
+                 if (d < innerRadius){
+                    ratio = 1.0;
+                 }
+                 else if (d < outerRadius) {
+                    ratio = mix(0.0, 1.0, (outerRadius -d)/(outerRadius - innerRadius));
+                 }
+                 gl_FragColor = vec4(color.rgb * ratio, 0.1); 
+            }
+        </script>
+        
+    </head>
+    
+    <body style="position:absolute;padding:0;margin:0;width:100%;height:100%">
+        <div id="container" style="position:absolute;padding:0;margin:0;width:100%;height:100%"></div>
+        <div style="position:absolute;top:0;left:0; color:white; padding:5px;z-index:20">
+            <span id="playerA_score">Player: 0</span><br />
+            <span id="playerB_score">IA: 0</span>
+        </div>
+    </body>
+</html>
