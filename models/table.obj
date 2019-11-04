@@ -1,6 +1,6 @@
 # Blender v2.60 (sub 0) OBJ File: 'Airhockey.blend'
 # www.blender.org
-mtllib Airhockey.mtl
+mtllib table.mtl
 o ID3.002_ID96.005
 v -7.845627 -0.827616 0.000000
 v -7.845627 -0.827616 -0.557086

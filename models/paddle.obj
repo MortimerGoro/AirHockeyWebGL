@@ -1,6 +1,6 @@
 # Blender v2.60 (sub 0) OBJ File: 'Paddle.blend'
 # www.blender.org
-mtllib Paddle.mtl
+mtllib paddle.mtl
 o Mesh_Cylinder
 v 0.000000 0.050000 -0.000000
 v 0.000000 0.050000 -1.000000

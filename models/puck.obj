@@ -1,6 +1,6 @@
 # Blender v2.60 (sub 0) OBJ File: 'Puck.blend'
 # www.blender.org
-mtllib Puck.mtl
+mtllib puck.mtl
 o Cylinder_Cylinder.001
 v -0.098291 0.050200 -0.997974
 v 0.804740 0.150241 0.079210

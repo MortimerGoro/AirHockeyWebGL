@@ -3,23 +3,18 @@
  * Copyright (c) 2014 Imanol Fernandez @MortimerGoro
 */
 
-'use strict';
+import * as THREE from "../node_modules/three/build/three.module.js"
 
-(function(){
-    
-window.Hockey = window.Hockey || {};
-    
 var targetPos = new THREE.Vector3(0,0,0);
 var goalPos = new THREE.Vector3(0,0,0);
     
-Hockey.AI = function(model, simulation) {
-    this.model = model;
-    this.simulation = simulation;
-}
-
-Hockey.AI.prototype = {
+export class AI {
+    constructor(model, simulation) {
+        this.model = model;
+        this.simulation = simulation;
+    }
     
-    play: function() {
+    play() {
         var model = this.model;
         var myPos = model.playerB.paddle.position;
         var tableSize = model.tableSize;
@@ -64,9 +59,9 @@ Hockey.AI.prototype = {
         var speedZ = tableSize.depth* 0.03 * speed;
         myPos.x+= Math.min(diffX, speedX) * (myPos.x > targetPos.x ? -1 : 1);
         myPos.z+= Math.min(diffZ, speedZ) * (myPos.z > targetPos.z ? -1 : 1);
-    },
+    }
     
-    heuristic: function(puck) {
+    heuristic(puck) {
         if (!puck.active) {
             return 0;   
         }
@@ -99,5 +94,3 @@ Hockey.AI.prototype = {
                 
     }
 }
-    
-})();

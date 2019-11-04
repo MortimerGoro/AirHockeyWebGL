@@ -2,21 +2,15 @@
  * PingPongWebGL is licensed under MIT licensed. See LICENSE.md file for more information.
  * Copyright (c) 2014 MortimerGoro
 */
-
-'use strict';
-
-(function(){
     
-window.Hockey = window.Hockey || {};
-    
-Hockey.AudioManager = function() {
-    this.hitSounds = [];
-    this.edgeSounds = [];
-    this.goalSounds = [];
-}
+class AudioManager {
+    constructor() {
+        this.hitSounds = [];
+        this.edgeSounds = [];
+        this.goalSounds = [];
+    }
 
-Hockey.AudioManager.prototype = {
-    init: function(model) {
+    init(model) {
         this.model = model;
         function loadSounds(target, sounds) {
             var prefix = "audio/";
@@ -32,31 +26,29 @@ Hockey.AudioManager.prototype = {
         loadSounds(this.hitSounds, ["hit1", "hit2"]);
         loadSounds(this.edgeSounds, ["edge1", "edge2"]);
         loadSounds(this.goalSounds, ["goal1"]);     
-    },
-    
-    playRandomSound: function(target, volume) {
+    }
+
+    playRandomSound(target, volume) {
         if (!this.model.soundEnabled || !target.length) {
             return;
         }
         
         var rnd = Math.floor(Math.random() * target.length);
         target[rnd].volume = volume || 0.5;
-        target[rnd].play();
-    },
+        //target[rnd].play();
+    }
     
-    playHitSound: function(volume) {
+    playHitSound(volume) {
         this.playRandomSound(this.hitSounds, volume);
-    },
+    }
     
-    playGoalSound: function(volume) {
+    playGoalSound(volume) {
         this.playRandomSound(this.goalSounds, volume);
-    },
+    }
     
-    playEdgeSound: function(volume) {
+    playEdgeSound(volume) {
         this.playRandomSound(this.edgeSounds, volume);
     }
 }
-    
-Hockey.Audio = new Hockey.AudioManager();
-    
-})();
+
+export default new AudioManager();

@@ -3,22 +3,26 @@
  * Copyright (c) 2014 Imanol Fernandez @MortimerGoro
 */
 
-'use strict';
+import * as THREE from "../node_modules/three/build/three.module.js"
+import { OrbitControls } from '../node_modules/three/examples/jsm/controls/OrbitControls.js'
+import { GameModel } from '/src/model.js'
+import { Physics } from '/src/physics.js'
+import { AI } from '/src/ai.js'
+import AudioManager from "./audio.js"
+import Utils from "./utils.js"
+import { GLTFLoader } from '../node_modules/three/examples/jsm/loaders/GLTFLoader.js';
 
-(function(){
-    
-window.Hockey = window.Hockey || {};
+var raycaster = new THREE.Raycaster();
+var mouse = new THREE.Vector2();
+var controls;
 
-var projector = new THREE.Projector();
+export class GameScene {
+    constructor(renderer, gameModel) {
+        this.renderer = renderer;
+        this.init(gameModel);
+    }
 
-Hockey.GameScene = function(renderer, gameModel) {
-    this.renderer = renderer;
-    this.init(gameModel);
-}
-
-Hockey.GameScene.prototype = {
-    
-    init: function(model) {
+    init(model) {
         this.model = model;
         this.input = {x:0, y:0};
         this.inputPlane = null;
@@ -29,24 +33,25 @@ Hockey.GameScene.prototype = {
     	this.scene = new THREE.Scene();
         
 		//initialize camera
-		this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth/window.innerHeight, 0.5, 1000);
-		this.scene.add(this.camera);
+		this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth/window.innerHeight, 0.2, 100);
 		this.camera.position.set(0,2.5,3);
-		this.camera.lookAt(new THREE.Vector3(0,0,-1));
+        //this.camera.lookAt(new THREE.Vector3(0,0,-1));
+        
+        controls = new OrbitControls( this.camera, this.renderer.domElement );
         
         //initialize audio
-        Hockey.Audio.init(model);
+        AudioManager.init(model);
         
         //initialize world
         this.loadBackground();
         this.loadLight();
-        this.initInput();
+        //this.initInput();
         this.loadModels(modelsLoaded);
         
         var me = this;
         function modelsLoaded() {
-            me.simulation = new Hockey.Physics(me.model);
-            me.ai = new Hockey.AI(me.model, me.simulation);
+            me.simulation = new Physics(me.model);
+            me.ai = new AI(me.model, me.simulation);
             
             model.on("goal", function(puck){
                 me.onGoal(puck);   
@@ -57,14 +62,13 @@ Hockey.GameScene.prototype = {
             });
                       
             me.prepareToServe();
-            me.model.setState(Hockey.GameModel.STATES.PLAYING);
+            me.model.setState(GameModel.STATES.PLAYING);
         }
     
-    },
+    }
     
-    loadBackground: function() {
-        
-        var t = THREE.ImageUtils.loadTexture( "images/floor.jpg" );
+    loadBackground() {
+        var t = Utils.loadTexture( "images/floor.jpg" );
         t.wrapS = THREE.RepeatWrapping;
         t.wrapT = THREE.RepeatWrapping;
         
@@ -82,31 +86,9 @@ Hockey.GameScene.prototype = {
         var floorMesh = new THREE.Mesh( floorPlane, material );
         floorMesh.rotation.x = -Math.PI * 0.5;
         this.scene.add(floorMesh);
-        
-        // Floor
-        /*var floorPlane = new THREE.PlaneGeometry(7,7);
-        var material = new THREE.MeshPhongMaterial( { color: 0xffffff, map:THREE.ImageUtils.loadTexture( "images/floor.jpg"), ambient: 0xaaaaaa } );
-        material.map.repeat.x = 4;
-        material.map.repeat.y = 4;
-        material.map.wrapS = THREE.RepeatWrapping;
-        material.map.wrapT = THREE.RepeatWrapping;
+    }
     
-        var floorMesh = new THREE.Mesh( floorPlane, material );
-        floorMesh.rotation.x = -Math.PI * 0.5;
-        this.scene.add(floorMesh);
-
-        // Cover
-        var coverPlane = new THREE.PlaneGeometry(7,7);
-        var coverMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, map:THREE.ImageUtils.loadTexture( "images/cover.png"), transparent: true } );
-        var coverMesh = new THREE.Mesh( coverPlane, coverMaterial );
-        coverMesh.rotation.x = -Math.PI * 0.5;
-        coverMesh.position.y = 0.1;
-        
-        this.scene.add(coverMesh);*/
-
-    },
-    
-    loadSkybox: function() {
+    loadSkybox() {
         var imagePrefix = "sky/";
         var directions  = ["posx", "negx", "posy", "negy", "posz", "negz"];
         var imageSuffix = ".jpg";
@@ -115,24 +97,24 @@ Hockey.GameScene.prototype = {
         var materialArray = [];
         for (var i = 0; i < 6; i++)
             materialArray.push( new THREE.MeshBasicMaterial({
-                map: THREE.ImageUtils.loadTexture( imagePrefix + directions[i] + imageSuffix ),
+                map: Utils.loadTexture( imagePrefix + directions[i] + imageSuffix ),
                 side: THREE.BackSide
             }));
         var skyMaterial = new THREE.MeshFaceMaterial( materialArray );
         var skyBox = new THREE.Mesh( skyGeometry, skyMaterial );
         this.scene.add( skyBox );  
-    },
+    }
     
-    loadLight: function() {   
+    loadLight() {   
         this.scene.add(new THREE.AmbientLight(0x222222));
         
         var light = new THREE.SpotLight( 0xffffff, 0.8 );
         light.position.set( 0, 10, 0 );
         light.target.position.set( 0, 0, 0 );
         this.scene.add( light );
-    },
+    }
     
-    getCompoundBoundingBox: function (object3D) {
+    getCompoundBoundingBox(object3D) {
         var box = null;
         object3D.traverse(function (obj3D) {
             var geometry = obj3D.geometry;
@@ -145,12 +127,11 @@ Hockey.GameScene.prototype = {
             }
         });
         return box;
-    },
+    }
 
-    loadModels: function(callback) {
+    loadModels(callback) {
         var me = this;
-        var loader = new THREE.OBJMTLLoader();
-        loader.load( 'models/table.obj', 'models/table.mtl', function ( object ) {
+        Utils.loadGTLF('table.gltf', function (object) {
             var table = object;
             var bb = me.getCompoundBoundingBox(table);
             var tableSize = {width: bb.max.z - bb.min.z, 
@@ -170,21 +151,20 @@ Hockey.GameScene.prototype = {
             
             //Custom surface
             var surfacePlane = new THREE.PlaneGeometry(tableSize.width,tableSize.depth);
-            var surfaceMaterial = new THREE.MeshBasicMaterial( {color: 0xbbbbbb, map:THREE.ImageUtils.loadTexture( "images/surface.png") } );
+            var surfaceMaterial = new THREE.MeshBasicMaterial( {color: 0xbbbbbb, map:Utils.loadTexture( "images/surface.png") } );
             var surfaceMesh = new THREE.Mesh( surfacePlane, surfaceMaterial );
             surfaceMesh.rotation.x = -Math.PI * 0.5;
 
             surfaceMesh.position.y = tableSize.height+0.001;
-            me.scene.add(surfaceMesh);
+            //me.scene.add(surfaceMesh);
             
             me.inputPlane = new THREE.Plane(new THREE.Vector3(0,-1,0), tableSize.height);
             
-            new THREE.OBJMTLLoader().load('models/paddle.obj', 'models/paddle.mtl', paddleLoaded);
+            //Utils.loadGTLF('paddle.gltf', paddleLoaded);
             
         } );
         
         function paddleLoaded(object) {
-            
             var paddle = object;
             var model = me.model;
             var bb = me.getCompoundBoundingBox(paddle);
@@ -206,7 +186,7 @@ Hockey.GameScene.prototype = {
             me.scene.add(paddle);
             me.scene.add(paddle2);
             
-            new THREE.OBJMTLLoader().load('models/puck.obj', 'models/puck.mtl', puckLoaded);
+            //Utils.loadOBJMTL('puck.obj', 'puck.mtl', puckLoaded);
         }
         
         function puckLoaded(object) {
@@ -226,10 +206,9 @@ Hockey.GameScene.prototype = {
         }
         
         
-    },
+    }
     
-    initInput: function() {
-        
+    initInput() {
         var me = this;
         function inputHandler(ev) {
             if (ev.targetTouches && ev.targetTouches.length > 1) {
@@ -245,14 +224,14 @@ Hockey.GameScene.prototype = {
         this.renderer.domElement.addEventListener("mousemove", inputHandler);
         this.renderer.domElement.addEventListener("touchstart", inputHandler);
         this.renderer.domElement.addEventListener("touchmove", inputHandler);
-    },
+    }
     
-    processInput: function(x,y) {
+    processInput(x,y) {
         this.input.x = x;
         this.input.y = y;
-    },
+    }
     
-    prepareToServe: function() {
+    prepareToServe() {
         var model = this.model;
         for (var i = 0; i < model.numPucks; ++i) {
             var mesh = model.pucks[i].mesh;
@@ -263,9 +242,9 @@ Hockey.GameScene.prototype = {
         }
         this.simulation.updatePucks();
         this.updateScores();
-    },
-    onGoal: function(puck) {
-        Hockey.Audio.playGoalSound();
+    }
+    onGoal(puck) {
+        AudioManager.playGoalSound();
         puck.mesh.traverse( function ( object ) { object.visible = false; } );
         puck.active = false;
         this.updateScores();
@@ -276,9 +255,8 @@ Hockey.GameScene.prototype = {
                 me.prepareToServe(); 
             }, 100);   
         }
-    },
-    onPucksCountChanged: function() {
-        
+    }
+    onPucksCountChanged() {
         var current = this.model.pucks.length;
         var target = this.model.numPucks;
         
@@ -301,18 +279,18 @@ Hockey.GameScene.prototype = {
         }
         
         this.prepareToServe();
-        
-    },
-    updateScores: function() {
+    }
+    updateScores() {
         document.getElementById("playerA_score").innerHTML = "Player: " + this.model.playerA.score;
         document.getElementById("playerB_score").innerHTML = "IA: " + this.model.playerB.score;
-    },
-    update: function() {
-        
+    }
+    update() {
+        controls.update();
+        return;
         var model = this.model;
         var tableSize = model.tableSize;
         
-        if (model.state === Hockey.GameModel.STATES.LOADING) {
+        if (model.state === GameModel.STATES.LOADING) {
             return;
         }
         
@@ -323,27 +301,27 @@ Hockey.GameScene.prototype = {
         //set camera position
         var camera = this.camera;
         var tableSize = model.tableSize;
-        if (model.camera === Hockey.GameModel.CAMERAS.FRONT) {
+        if (model.camera === GameModel.CAMERAS.FRONT) {
             var cx = tableSize.width * 0.5 * px;
             var cy = 2.5 + tableSize.height + 0.5 * py;
             var cz = tableSize.depth;
             camera.position.set(cx,cy,cz);
             camera.lookAt(new THREE.Vector3(0, tableSize.height, 0));
         }
-        else if (model.camera === Hockey.GameModel.CAMERAS.TOP) {
+        else if (model.camera === GameModel.CAMERAS.TOP) {
             camera.position.set(0, tableSize.height * 4.5, 0.1);
             camera.lookAt(new THREE.Vector3(0, tableSize.height, 0));
         }
-        else if (model.camera === Hockey.GameModel.CAMERAS.SIDE) {
+        else if (model.camera === GameModel.CAMERAS.SIDE) {
             camera.position.set(-tableSize.width, 2.5 + tableSize.height + 0.5 * py, 0);
             camera.lookAt(new THREE.Vector3(0, tableSize.height, 0));
         }
         
         //Project input to table plane
-        var vector = new THREE.Vector3(px, py, 0.5);
-        projector.unprojectVector( vector, camera );
-        var ray = new THREE.Ray( camera.position, vector.sub( camera.position ).normalize() );
-        var intersect = ray.intersectPlane(this.inputPlane);
+        mouse.x = px;
+        mouse.py = py;
+        raycaster.setFromCamera(mouse, camera);
+        var intersect = raycaster.ray.intersectPlane(this.inputPlane);
         
         if (!intersect) {
             intersect = paddle.position.clone();
@@ -363,19 +341,15 @@ Hockey.GameScene.prototype = {
             paddle.position.z = tableSize.depth * (0.5 - model.goalSize.depth) - paddleRadius;            
         }
         
-        
-        if (model.state === Hockey.GameModel.STATES.PLAYING) {
+        if (model.state === GameModel.STATES.PLAYING) {
             this.ai.play();
             this.simulation.updatePaddles();
             this.simulation.simulate();
         }
-
-    },
+    }
     
-    render: function(){
+    render(){
         this.update();
         this.renderer.render(this.scene, this.camera);
     }
 }
- 
-})();

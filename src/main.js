@@ -1,45 +1,38 @@
-'use strict';
+import * as THREE from "../node_modules/three/build/three.module.js" 
+import {GameModel} from '/src/model.js'
+import {GameScene} from '/src/hockey.js'
 
-(function(){
-    
-    var renderer;
-    var gameScene;
-    
-    var requestAnimationFrame = window.requestAnimationFrame ||
-        window.webkitRequestAnimationFrame ||
-		window.mozRequestAnimationFrame ||
-		window.oRequestAnimationFrame ||
-		window.msRequestAnimationFrame ||
-        function(callback) {
-			window.setTimeout( callback, 1000 / 60 );
-		};
-    
-    
-    function init(){
+var renderer;
+var gameScene;
 
-        var canvas = document.createElement("canvas");
-        canvas.screencanvas = true; //for cocoonjs
-        var dpr = window.devicePixelRatio;
-        canvas.width = window.innerWidth * dpr;
-        canvas.height = window.innerHeight * dpr;
-        renderer = new THREE.WebGLRenderer({ antialias: true, canvas: canvas});
-        renderer.setClearColor(0x000000);
-        renderer.setSize(canvas.width, canvas.height);
-        document.getElementById("container").appendChild(canvas);
-        canvas.style.cssText = "position:absolute;padding:0;margin:0;width:100%;height:100%";
-        
-        var model = new Hockey.GameModel();
-        model.createGUI();
-        gameScene = new Hockey.GameScene(renderer, model);
-        
-        requestAnimationFrame( render );
-    }
+var requestAnimationFrame = window.requestAnimationFrame ||
+    window.webkitRequestAnimationFrame ||
+    window.mozRequestAnimationFrame ||
+    window.oRequestAnimationFrame ||
+    window.msRequestAnimationFrame ||
+    function(callback) {
+        window.setTimeout( callback, 1000 / 60 );
+    };
+
+
+function init(){
+    renderer = new THREE.WebGLRenderer( { antialias: true } );
+    renderer.setPixelRatio( window.devicePixelRatio );
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    renderer.setClearColor(0x000000, 1);
+    document.getElementById("container").appendChild(renderer.domElement);
+    renderer.domElement.style.cssText = "position:absolute;padding:0;margin:0;width:100%;height:100%";
     
-    function render(){     
-        gameScene.render();
-        requestAnimationFrame(render);
-    }
-    
-    window.onload = init;
-    
-})();
+    var model = new GameModel();
+    model.createGUI();
+    gameScene = new GameScene(renderer, model);
+
+    render();
+}
+
+function render(){
+    requestAnimationFrame(render);
+    gameScene.render();
+}
+
+window.onload = init;

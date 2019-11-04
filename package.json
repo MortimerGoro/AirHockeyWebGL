@@ -1,0 +1,30 @@
+{
+  "name": "airhockeywebgl",
+  "version": "1.0.0",
+  "description": "AirHockeyWebGL",
+  "main": "src/main.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MortimerGoro/AirHockeyWebGL.git"
+  },
+  "keywords": [
+    "air",
+    "hockey",
+    "webgl"
+  ],
+  "author": "Imanol Fernandez",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/MortimerGoro/AirHockeyWebGL/issues"
+  },
+  "homepage": "https://github.com/MortimerGoro/AirHockeyWebGL#readme",
+  "dependencies": {
+    "three": "^0.109.0"
+  }
+}
